@@ -1,46 +1,25 @@
 package com.example.wikipedialivesearch;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.StrictMode;
 import android.support.annotation.RequiresApi;
-import android.support.v4.text.PrecomputedTextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.PrecomputedText;
-import android.util.JsonReader;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SearchView;
-import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends AppCompatActivity {
-
     SearchView searchView;
     Button buttons[];
     String links [] = new String[5];
@@ -61,8 +40,7 @@ public class MainActivity extends AppCompatActivity {
         buttons[3] = findViewById(R.id.button4);
         buttons[4] = findViewById(R.id.button5);
 
-
-        for(int i=0; i<5; i++){
+        for(int i=0 ;i<5; i++){
             final int finalI = i;
             buttons[i].setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -103,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
             String line;
             String elo="";
             while((line = reader.readLine()) != null){
-                elo +=line;
+                elo+=line;
             }
 
             JSONArray jsonArray = new JSONArray(elo);
