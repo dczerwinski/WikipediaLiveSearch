@@ -1,7 +1,10 @@
 package com.example.wikipedialivesearch;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Message;
 import android.os.StrictMode;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
@@ -9,22 +12,25 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SearchView;
-
 import org.json.JSONArray;
 import org.json.JSONException;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
     SearchView searchView;
     Button buttons[];
-    String links [] = new String[5];
+    List<String> links = new ArrayList<String>();
+    List<String> findings = new ArrayList<String>();
+    Handler handler;
+    volatile String in;
 
-
+    @SuppressLint("HandlerLeak")
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,18 +45,49 @@ public class MainActivity extends AppCompatActivity {
         buttons[2] = findViewById(R.id.button3);
         buttons[3] = findViewById(R.id.button4);
         buttons[4] = findViewById(R.id.button5);
+        in = "";
 
         for(int i=0 ;i<5; i++){
             final int finalI = i;
             buttons[i].setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Uri uri = Uri.parse(links[finalI]); // missing 'http://' will cause crashed
+                    Uri uri = Uri.parse(links.get(finalI));
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                     startActivity(intent);
                 }
             });
         }
+
+
+        handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+
+                if(msg.obj instanceof  List && msg.obj != null) {
+                    if(((List<String>)msg.obj).size() != 0) {
+                        findings.clear();
+                        links.clear();
+                        for(int i=0 ; i<((List<String>) msg.obj).size(); i++){
+                            if(i%2 == 0)findings.add(((List<String>) msg.obj).get(i));
+                            else links.add(((List<String>) msg.obj).get(i));
+                        }
+                        for(int i=0; i<5; i++){
+                            buttons[i].setVisibility(View.VISIBLE);
+                            buttons[i].setText(findings.get(i));
+                        }
+                    }
+                }
+
+                if(in.length() == 0){
+                    for(int i=0; i<5; i++){
+                        buttons[i].setVisibility(View.INVISIBLE);
+                    }
+                }
+            }
+
+        };
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -60,20 +97,42 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                try {
-                    go(newText);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                in = newText;
+                if(newText.length() == 0){
+                    for(int i=0; i<5; i++){
+                        buttons[i].setVisibility(View.INVISIBLE);
+                    }
                 }
+
                 return false;
             }
         });
 
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true){
+                    try {
+                        Message message = new Message();
+                        message.obj = go();
+                        if(message.obj != null)
+                        handler.sendMessage(message);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
     }
 
-    private void go(String in) throws IOException, JSONException {
+
+
+
+    private List<String> go() throws IOException, JSONException {
+        List<String> list = new ArrayList<String>();
         if(in.length() >0) {
             String urls = "https://en.wikipedia.org/w/api.php?action=opensearch&search="+in+"&limit=5&namespace=0&format=json";
             URL ur1 = new URL(urls);
@@ -89,22 +148,14 @@ public class MainActivity extends AppCompatActivity {
             JSONArray links = new JSONArray(jsonArray.get(3).toString());
 
             for(int i=0; i<5; i++){
-                buttons[i].setText(searchResults.get(i).toString());
-                buttons[i].setVisibility(View.VISIBLE);
-                this.links[i] = links.get(i).toString();
+                list.add(searchResults.get(i).toString());
+                list.add(links.get(i).toString());
             }
-
-
             reader.close();
         }
-        else {
-            for(int i=0; i<5; i++){
-                buttons[i].setVisibility(View.INVISIBLE);
-            }
+        else{
+            return null;
         }
-
+        return list;
     }
-
-
-
 }
