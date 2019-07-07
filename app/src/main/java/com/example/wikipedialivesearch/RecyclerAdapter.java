@@ -9,8 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,17 +81,5 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerViewHolder>{
     public int getItemCount() {
         if(findings == null)return 0;
         return findings.size();
-    }
-
-    public void setNewList(List<String> listData){
-        this.findings = listData;
-    }
-
-    public void setLinks(List<String> links) {
-        this.links = links;
-    }
-    public void hide(){
-        this.findings = null;
-        this.links = null;
     }
 }
