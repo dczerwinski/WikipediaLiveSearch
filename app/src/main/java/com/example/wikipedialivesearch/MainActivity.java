@@ -9,6 +9,8 @@ import android.os.StrictMode;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SearchView;
@@ -23,6 +25,11 @@ import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
+    private RecyclerView recyclerView;
+    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.LayoutManager layoutManager;
+
+
     SearchView searchView;
     Button buttons[];
     List<String> links = new ArrayList<String>();
@@ -38,26 +45,19 @@ public class MainActivity extends AppCompatActivity {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
         setContentView(R.layout.activity_main);
-        searchView = findViewById(R.id.searchField);
-        buttons = new Button[5];
-        buttons[0] = findViewById(R.id.button1);
-        buttons[1] = findViewById(R.id.button2);
-        buttons[2] = findViewById(R.id.button3);
-        buttons[3] = findViewById(R.id.button4);
-        buttons[4] = findViewById(R.id.button5);
-        in = "";
 
-        for(int i=0 ;i<5; i++){
-            final int finalI = i;
-            buttons[i].setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Uri uri = Uri.parse(links.get(finalI));
-                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                    startActivity(intent);
-                }
-            });
-        }
+        recyclerView = (RecyclerView)findViewById(R.id.recycle);
+        recyclerView.setHasFixedSize(true);
+        layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
+        final RecyclerAdapter adapter = new RecyclerAdapter(findings,links,this);
+        recyclerView.setAdapter(adapter);
+
+        searchView = findViewById(R.id.searchField);
+
+
+
+        in = "";
 
 
         handler = new Handler() {
@@ -73,17 +73,16 @@ public class MainActivity extends AppCompatActivity {
                             if(i%2 == 0)findings.add(((List<String>) msg.obj).get(i));
                             else links.add(((List<String>) msg.obj).get(i));
                         }
-                        for(int i=0; i<5; i++){
-                            buttons[i].setVisibility(View.VISIBLE);
-                            buttons[i].setText(findings.get(i));
-                        }
+
+                        final RecyclerAdapter adapter = new RecyclerAdapter(findings,links,MainActivity.this);
+                        recyclerView.setAdapter(adapter);
+
                     }
                 }
 
                 if(in.length() == 0){
-                    for(int i=0; i<5; i++){
-                        buttons[i].setVisibility(View.INVISIBLE);
-                    }
+                    final RecyclerAdapter adapter = new RecyclerAdapter(null,null,MainActivity.this);
+                    recyclerView.setAdapter(adapter);
                 }
             }
 
@@ -99,9 +98,8 @@ public class MainActivity extends AppCompatActivity {
             public boolean onQueryTextChange(String newText) {
                 in = newText;
                 if(newText.length() == 0){
-                    for(int i=0; i<5; i++){
-                        buttons[i].setVisibility(View.INVISIBLE);
-                    }
+                    final RecyclerAdapter adapter = new RecyclerAdapter(null,null,MainActivity.this);
+                    recyclerView.setAdapter(adapter);
                 }
 
                 return false;
@@ -159,3 +157,4 @@ public class MainActivity extends AppCompatActivity {
         return list;
     }
 }
+
